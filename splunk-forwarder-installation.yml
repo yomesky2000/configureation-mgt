@@ -1,0 +1,44 @@
+---
+- hosts: web-server
+  become: true
+  tasks:
+   - name: Download Splunk forwarder to client server
+     get_url:
+       url:  https://download.splunk.com/products/universalforwarder/releases/9.0.1/linux/splunkforwarder-9.0.1-82c987350fde-linux-2.6-x86_64.rpm
+       dest: /opt/
+       mode: '0440'
+
+   - name: Install splunk universal forwarder
+     command: yum install /opt/splunkforwarder-9.0.1-82c987350fde-linux-2.6-x86_64.rpm -y
+
+   - name: Add splunk to $PATH
+     blockinfile:
+       dest: "{{ ansible_env.HOME }}/.bashrc"
+       block: |
+         export SPLUNK_HOME="/opt/splunkforwarder"
+         export PATH=$PATH:$SPLUNK_HOME/bin
+       marker: '# {mark} ANSIBLE UPDATED BLOCK'
+       insertbefore: BOF
+       create: yes
+       state: present
+
+   - name: Start the splunk universal forwarder
+     command: /opt/splunkforwarder/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd password
+
+   - name: Configure the splunk forwarder to start at boot time
+     command: /opt/splunkforwarder/bin/splunk enable boot-start
+
+   - name: Forward data to Splunk Indexer
+     command: /opt/splunkforwarder/bin/splunk add forward-server 54.165.228.100:9997 -auth admin:password
+
+   - name: Configure Splunk source types for log_audit monitoring
+     command: /opt/splunkforwarder/bin/splunk add monitor /var/log/audit/audit.log  -sourcetype log-audit -auth admin:password
+     
+
+   - name: Restart Splunk Enterprise Service
+     command: /opt/splunkforwarder/bin/splunk restart
+     register:  splunk_status
+
+   - debug:
+       var: splunk_status
+

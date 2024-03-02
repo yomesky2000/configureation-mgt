@@ -1,0 +1,48 @@
+---
+- hosts: jenkins-server
+  tasks:
+  - name: Install EPEL repository
+    command: amazon-linux-extras install epel -y
+ 
+  - name: Download Java 17
+    command: wget https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm
+
+  - name: Install Java 17
+    yum:
+      name: jdk-17_linux-x64_bin.rpm
+      state: present
+
+  - name: Download Jenkins Repository
+    get_url:
+      url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+      dest: /etc/yum.repos.d
+
+  - name: Import jenkins key
+    command: rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+  - name: Install Jenkins
+    yum:
+      name: jenkins
+      state: present
+
+  - name: Start jenkins service
+    service:
+      name: jenkins
+      state: started
+      enabled: yes
+
+  - name: sleep for 30 seconds and continue with play
+    wait_for:
+      timeout: 30
+    delegate_to: localhost
+
+  - name: Display jenkins password
+    command: cat /var/lib/jenkins/secrets/initialAdminPassword
+    register: jenkins_password
+
+  - debug: 
+      msg: "This is jenkins admin password  {{ jenkins_password.stdout }}"
+      
+
+
+

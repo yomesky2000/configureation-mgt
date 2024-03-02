@@ -1,0 +1,41 @@
+---
+- hosts: jenkins-server
+  tasks:
+  - name: Validate existing splunk forwarder version
+    command: /opt/splunkforwarder/bin/splunk --version
+    register: splunk_version
+
+  - debug: var=splunk_version
+
+  - name: Backup splunk forwarder directory
+    command: tar -cf /opt/splunk_backup /opt/splunkforwarder/etc
+
+  - name: Download splunk forwarder package
+    get_url:
+    url: 172.31.93.32
+      #url: https://download.splunk.com/products/universalforwarder/releases/9.1.1/linux/splunkforwarder-9.1.1-64e843ea36b1.x86_64.rpm
+      dest: /opt
+      mode: "0440"
+
+  - name: stop splunk forwarder service
+    command: /opt/splunkforwarder/bin/splunk stop
+    register: splunkforwarder_service
+
+  - name: Install latest splunk forwarder 9.1.1
+    command: yum install /opt/splunkforwarder-9.1.1-64e843ea36b1.x86_64.rpm --nogpgcheck -y
+
+  - name: Start Splunk Universal Forwarder
+    command: /opt/splunkforwarder/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd password
+
+  - name: stop splunk forwarder service
+    command: /opt/splunkforwarder/bin/splunk stop
+  
+  - name: Disable splunk at boot
+    command: /opt/splunkforwarder/bin/splunk  disable boot-start
+
+  - name: Validate latest version of splunk-forwarder
+    command: /opt/splunkforwarder/bin/splunk --version
+    register: splunk_forwarder_latest_version
+
+  - debug: var=splunk_forwarder_latest_version
+

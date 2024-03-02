@@ -1,0 +1,39 @@
+---
+- hosts: splunk-server
+  tasks:
+  - name: Download splunk software package
+    get_url:
+      url: https://download.splunk.com/products/splunk/releases/9.2.0.1/linux/splunk-9.2.0.1-d8ae995bf219.x86_64.rpm
+      dest: /opt
+      mode: '0644'
+
+  - name: Install splunk enterprise software package
+    yum:
+      name: /opt/splunk-9.2.0.1-d8ae995bf219.x86_64.rpm
+      state: present
+
+  - name: Accept splunk license
+    #command: /opt/splunk/bin/splunk start --accept-licence --answer-yes --no-prompt --seed-passwd password
+    command: /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd password
+
+  - name: Start Splunk service
+    command: /opt/splunk/bin/splunk start
+
+  - name: Change splunk folder ownership
+    command: chown -R splunk:splunk /opt/splunk
+
+  - name: Stop splunk service
+    command: /opt/splunk/bin/splunk stop
+
+  - name: Enable splunk service at boot time
+    command: /opt/splunk/bin/splunk enable boot-start
+
+  - name: Change splunk folder ownership
+    command: chown -R splunk:splunk /opt/splunk
+
+  - name: Start splunk service
+    command: /opt/splunk/bin/splunk start
+
+  - name: Enable listening on Splunk Indexer
+    command: /opt/splunk/bin/splunk  enable listen 9997 -auth admin:password
+

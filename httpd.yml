@@ -1,0 +1,24 @@
+---
+- hosts: web-server
+  tasks:
+  - name: Installation of Apache Web Server
+    yum:
+      name: httpd
+      state: latest
+
+  - name: Start apache service
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+
+  - name: Write content of our webservers
+    copy:
+      content: "This is our Test Webserver"
+      dest: /var/www/html/index.html
+
+
+  - name: Restart Apache web service
+    service:
+       name: httpd
+       state: restarted

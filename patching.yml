@@ -1,0 +1,34 @@
+---
+- hosts: jenkins-server
+  tasks:
+  - name: Stop  jenkins service
+    service:
+      name: jenkins
+      state: stopped
+
+  - name: check linux updates
+    command: yum check-update disableplugin=priorities
+    register: check_update
+
+  - debug: var=check_update
+
+  - name: Update all available  packages
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Reboot server and wait for 3 minutes for machine to come back online
+    reboot:
+      reboot_timeout: 180
+      test_command: "uptime"
+    register: uptime_result
+
+  - debug:
+      msg: "Display reboot time {{ uptime_result.elapsed }}"
+
+
+  - name: Start jenkins service
+    service:
+      name: jenkins
+      state: started
+      enabled: yes

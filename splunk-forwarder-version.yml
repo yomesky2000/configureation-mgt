@@ -1,0 +1,9 @@
+---
+- hosts: jenkins-server
+  tasks:
+  - name: Confirm splunk forwarder version
+    command: /opt/splunkforwarder/bin/splunk --version
+    register: forwarder_version
+
+
+  - debug: var=forwarder_version
