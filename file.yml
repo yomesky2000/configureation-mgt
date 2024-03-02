@@ -1,0 +1,13 @@
+---
+- hosts: dev-servers
+  tasks:
+  - name: Create a file
+    file:
+      path: /root/class.txt
+      state: touch
+
+  - name: Write content into a file
+    copy:
+      content: "Hello World, This is our first Ansible Automation Session"
+      dest: /root/class.txt
+
